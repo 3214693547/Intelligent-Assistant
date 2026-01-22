@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册 - SpringAI MCP RAG</title>
+    <link rel="stylesheet" href="css/login/login.css">
+    <style>
+        .login-box {
+            height: 420px;
+        }
+        .login-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        .login-link a {
+            color: #119e8f;
+            text-decoration: none;
+        }
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #f94447;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="login-box">
+        <div class="logo-box">
+            <h2 style="color: #119e8f; margin: 0;">注册新账号</h2>
+        </div>
+        
+        <div class="form-box">
+            <!-- 用户名输入框 -->
+            <div class="mobile-box">
+                <div class="div-mobile-prefix div-mobile">
+                    用户名
+                </div>
+                <div class="div-mobile-number div-mobile">
+                    <input type="text" 
+                           id="username" 
+                           class="mobile-field" 
+                           placeholder="3-20个字符"
+                           maxlength="20">
+                </div>
+            </div>
+            <div class="error-mobile-field" id="usernameError"></div>
+
+            <!-- 密码输入框 -->
+            <div class="mobile-box">
+                <div class="div-mobile-prefix div-mobile">
+                    密码
+                </div>
+                <div class="div-mobile-number div-mobile">
+                    <input type="password" 
+                           id="password" 
+                           class="mobile-field" 
+                           placeholder="6-20个字符"
+                           maxlength="20">
+                </div>
+            </div>
+            <div class="error-mobile-field" id="passwordError"></div>
+
+            <!-- 确认密码输入框 -->
+            <div class="mobile-box">
+                <div class="div-mobile-prefix div-mobile">
+                    确认密码
+                </div>
+                <div class="div-mobile-number div-mobile">
+                    <input type="password" 
+                           id="confirmPassword" 
+                           class="mobile-field" 
+                           placeholder="再次输入密码"
+                           maxlength="20">
+                </div>
+            </div>
+            <div class="error-mobile-field" id="confirmPasswordError"></div>
+
+            <!-- 昵称输入框（可选） -->
+            <div class="mobile-box">
+                <div class="div-mobile-prefix div-mobile">
+                    昵称
+                </div>
+                <div class="div-mobile-number div-mobile">
+                    <input type="text" 
+                           id="nickname" 
+                           class="mobile-field" 
+                           placeholder="选填，显示名称"
+                           maxlength="20">
+                </div>
+            </div>
+
+            <!-- 错误提示 -->
+            <div class="error-msg" id="errorMsg"></div>
+
+            <!-- 注册按钮 -->
+            <div class="btn-box">
+                <div class="btn-login-wrapper">
+                    <button class="btn-login" id="btnRegister" onclick="doRegister()">注 册</button>
+                </div>
+            </div>
+
+            <!-- 登录链接 -->
+            <div class="login-link">
+                已有账号？<a href="login.html">立即登录</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="libs/axios.min.js"></script>
+<script src="libs/js.cookie.min.js"></script>
+<script src="js/cookieUtils.js"></script>
+<script src="js/request.js"></script>
+<script>
+    // 回车键注册
+    document.addEventListener('DOMContentLoaded', function() {
+        const inputs = ['username', 'password', 'confirmPassword', 'nickname'];
+        inputs.forEach(id => {
+            document.getElementById(id).addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    doRegister();
+                }
+            });
+        });
+    });
+
+    // 清空错误提示
+    function clearErrors() {
+        document.getElementById('usernameError').innerText = '';
+        document.getElementById('passwordError').innerText = '';
+        document.getElementById('confirmPasswordError').innerText = '';
+        document.getElementById('errorMsg').innerText = '';
+    }
+
+    // 表单验证
+    function validateForm() {
+        clearErrors();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const confirmPassword = document.getElementById('confirmPassword').value.trim();
+        
+        // 验证用户名
+        if (!username) {
+            document.getElementById('usernameError').innerText = '请输入用户名';
+            return false;
+        }
+        if (username.length < 3 || username.length > 20) {
+            document.getElementById('usernameError').innerText = '用户名长度必须在3-20之间';
+            return false;
+        }
+        
+        // 验证密码
+        if (!password) {
+            document.getElementById('passwordError').innerText = '请输入密码';
+            return false;
+        }
+        if (password.length < 6 || password.length > 20) {
+            document.getElementById('passwordError').innerText = '密码长度必须在6-20之间';
+            return false;
+        }
+        
+        // 验证确认密码
+        if (!confirmPassword) {
+            document.getElementById('confirmPasswordError').innerText = '请再次输入密码';
+            return false;
+        }
+        if (password !== confirmPassword) {
+            document.getElementById('confirmPasswordError').innerText = '两次输入的密码不一致';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // 注册函数
+    function doRegister() {
+        if (!validateForm()) {
+            return;
+        }
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const nickname = document.getElementById('nickname').value.trim();
+        const btnRegister = document.getElementById('btnRegister');
+
+        // 禁用按钮，防止重复提交
+        btnRegister.disabled = true;
+        btnRegister.innerText = '注册中...';
+
+        // 调用注册接口
+        instance.post('/auth/register', {
+            username: username,
+            password: password,
+            nickname: nickname || username
+        }).then(response => {
+            if (response.status === 200) {
+                // 显示成功提示
+                document.getElementById('errorMsg').style.color = '#119e8f';
+                document.getElementById('errorMsg').innerText = '注册成功，正在跳转到登录页...';
+                
+                // 延迟跳转到登录页
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 1500);
+            } else {
+                document.getElementById('errorMsg').innerText = response.msg || '注册失败，请重试';
+                btnRegister.disabled = false;
+                btnRegister.innerText = '注 册';
+            }
+        }).catch(error => {
+            console.error('注册失败:', error);
+            let errorMessage = '注册失败，请检查网络连接';
+            
+            if (error.response && error.response.data) {
+                errorMessage = error.response.data.msg || error.response.data.message || errorMessage;
+            }
+            
+            document.getElementById('errorMsg').innerText = errorMessage;
+            btnRegister.disabled = false;
+            btnRegister.innerText = '注 册';
+        });
+    }
+</script>
+</body>
+</html>

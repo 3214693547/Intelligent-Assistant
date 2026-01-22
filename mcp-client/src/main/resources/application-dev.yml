@@ -1,0 +1,5 @@
+server:
+  port: 8080
+
+website:
+  domain: http://localhost:63342

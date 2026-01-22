@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录 - SpringAI MCP RAG</title>
+    <link rel="stylesheet" href="css/login/login.css">
+    <style>
+        .register-link {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+        .register-link a {
+            color: #119e8f;
+            text-decoration: none;
+        }
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+        .error-msg {
+            color: #f94447;
+            font-size: 14px;
+            text-align: center;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="login-box">
+        <div class="logo-box">
+            <h2 style="color: #119e8f; margin: 0;">智能助手</h2>
+        </div>
+        
+        <div class="form-box">
+            <!-- 用户名输入框 -->
+            <div class="mobile-box">
+                <div class="div-mobile-prefix div-mobile">
+                    用户名
+                </div>
+                <div class="div-mobile-number div-mobile">
+                    <input type="text" 
+                           id="username" 
+                           class="mobile-field" 
+                           placeholder="请输入用户名"
+                           maxlength="20">
+                </div>
+            </div>
+            <div class="error-mobile-field" id="usernameError"></div>
+
+            <!-- 密码输入框 -->
+            <div class="mobile-box">
+                <div class="div-mobile-prefix div-mobile">
+                    密码
+                </div>
+                <div class="div-mobile-number div-mobile">
+                    <input type="password" 
+                           id="password" 
+                           class="mobile-field" 
+                           placeholder="请输入密码"
+                           maxlength="20">
+                </div>
+            </div>
+            <div class="error-mobile-field" id="passwordError"></div>
+
+            <!-- 错误提示 -->
+            <div class="error-msg" id="errorMsg"></div>
+
+            <!-- 登录按钮 -->
+            <div class="btn-box">
+                <div class="btn-login-wrapper">
+                    <button class="btn-login" id="btnLogin" onclick="doLogin()">登 录</button>
+                </div>
+            </div>
+
+            <!-- 注册链接 -->
+            <div class="register-link">
+                还没有账号？<a href="register.html">立即注册</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="libs/axios.min.js"></script>
+<script src="libs/js.cookie.min.js"></script>
+<script src="js/cookieUtils.js"></script>
+<script src="js/request.js"></script>
+<script>
+    // 回车键登录
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                doLogin();
+            }
+        });
+    });
+
+    // 清空错误提示
+    function clearErrors() {
+        document.getElementById('usernameError').innerText = '';
+        document.getElementById('passwordError').innerText = '';
+        document.getElementById('errorMsg').innerText = '';
+    }
+
+    // 表单验证
+    function validateForm() {
+        clearErrors();
+        
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        
+        if (!username) {
+            document.getElementById('usernameError').innerText = '请输入用户名';
+            return false;
+        }
+        
+        if (!password) {
+            document.getElementById('passwordError').innerText = '请输入密码';
+            return false;
+        }
+        
+        return true;
+    }
+
+    // 登录函数
+    function doLogin() {
+        if (!validateForm()) {
+            return;
+        }
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const btnLogin = document.getElementById('btnLogin');
+
+        // 禁用按钮，防止重复提交
+        btnLogin.disabled = true;
+        btnLogin.innerText = '登录中...';
+
+        // 调用登录接口
+        instance.post('/auth/login', {
+            username: username,
+            password: password
+        }).then(response => {
+            if (response.status === 200 && response.data) {
+                const loginData = response.data;
+                
+                // 保存 Token 到 localStorage
+                localStorage.setItem('token', loginData.token);
+                localStorage.setItem('userId', loginData.userId);
+                localStorage.setItem('username', loginData.username);
+                localStorage.setItem('nickname', loginData.nickname || loginData.username);
+                
+                // 显示成功提示
+                document.getElementById('errorMsg').style.color = '#119e8f';
+                document.getElementById('errorMsg').innerText = '登录成功，正在跳转...';
+                
+                // 延迟跳转
+                setTimeout(() => {
+                    window.location.href = 'spring-ai.html';
+                }, 500);
+            } else {
+                document.getElementById('errorMsg').innerText = response.msg || '登录失败，请重试';
+                btnLogin.disabled = false;
+                btnLogin.innerText = '登 录';
+            }
+        }).catch(error => {
+            console.error('登录失败:', error);
+            let errorMessage = '登录失败，请检查网络连接';
+            
+            if (error.response && error.response.data) {
+                errorMessage = error.response.data.msg || error.response.data.message || errorMessage;
+            }
+            
+            document.getElementById('errorMsg').innerText = errorMessage;
+            btnLogin.disabled = false;
+            btnLogin.innerText = '登 录';
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "E:\\codes\\tools\\nodeJS\\npx.cmd",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "E:\\codes\\Java\\IDEA\\projects"
+      ]
+    }
+  }
+}

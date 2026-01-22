@@ -1,0 +1,78 @@
+spring:
+  application:
+    name: spring-ai-mcp-client
+  profiles:
+    active: dev
+  ai:
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always  # 启用自动初始化表结构
+    mcp:
+      client:
+        enabled: true
+        name: spring-ai-mcp-client
+        type: ASYNC
+        sse:
+          connections:
+#            server1:
+#              url: https://mcp.amap.com
+#              sse-endpoint: /sse?key=93633251f4a98332e665bda12534d422
+            # 12306 MCP SSE 服务器配置
+            mcp-12306:
+              url: https://mcp.api-inference.modelscope.net
+              sse-endpoint: /efb67095cf894f/sse
+            server2:
+              url: http://localhost:9060
+              sse-endpoint: /sse
+        stdio:
+          servers-configuration: classpath:mcp-server.json
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      base-url: ${OPENAI_BASE_URL}
+      chat:
+        options:
+          model: ${OPENAI_MODEL}
+    vectorstore:
+      redis:
+        initialize-schema: true         # 是否初始化所需的模式
+        index-name: lee-vectorstore     # 用于存储向量的索引名称
+        prefix: 'embedding:'             # Redis 键的前缀
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/springai-items-mcp?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    hikari:
+      pool-name: DataSourceHikariCP
+      connection-timeout: 30000
+      minimum-idle: 5
+      maximum-pool-size: 20
+#
+logging:
+  level:
+    root: info
+
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: AUTO
+      update-strategy: not_empty
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: 7200000  # 2小时（毫秒）
+
+internet:
+  websearch:
+    searxng:
+      url: http://localhost:6080/search
+      counts: 5
